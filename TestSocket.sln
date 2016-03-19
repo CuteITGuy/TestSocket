@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketCommon", "SocketCommo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketClientConsole", "SocketClientConsole\SocketClientConsole.csproj", "{7818D963-4974-465B-9642-19BB38695794}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerSocketWindow", "ServerSocketWindow\ServerSocketWindow.csproj", "{BC7943C9-4F15-4BB2-99EF-4720D816DC8E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketClientWindow", "SocketClientWindow\SocketClientWindow.csproj", "{4F9CDF00-5ED8-4DD8-9C4D-7D2B6B9767E8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{7818D963-4974-465B-9642-19BB38695794}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7818D963-4974-465B-9642-19BB38695794}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7818D963-4974-465B-9642-19BB38695794}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC7943C9-4F15-4BB2-99EF-4720D816DC8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC7943C9-4F15-4BB2-99EF-4720D816DC8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC7943C9-4F15-4BB2-99EF-4720D816DC8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC7943C9-4F15-4BB2-99EF-4720D816DC8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F9CDF00-5ED8-4DD8-9C4D-7D2B6B9767E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F9CDF00-5ED8-4DD8-9C4D-7D2B6B9767E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F9CDF00-5ED8-4DD8-9C4D-7D2B6B9767E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F9CDF00-5ED8-4DD8-9C4D-7D2B6B9767E8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

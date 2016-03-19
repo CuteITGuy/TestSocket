@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using SocketCommon;
 
 
@@ -6,47 +7,58 @@ namespace ServerSocket
 {
     public class SocketListener: SocketBase
     {
-        #region Fields
-        private bool _continued;
-        #endregion
-
-
         #region Methods
-        public void Listen()
-        {
-            try
-            {
-                _continued = true;
-                ListenForMessage();
-            }
-            catch (Exception exception)
-            {
-                OnError(exception.Message);
-            }
-        }
-
-        public void Stop()
-        {
-            _continued = false;
-        }
+        public void BeginListen() => TryDo(BeginListenForMessage);
+        public void Listen() => TryDo(ListenForMessage);
         #endregion
 
 
         #region Implementation
+        private void BeginListenForMessage()
+        {
+            using (var listener = CreateListener())
+            {
+                while (true)
+                {
+                    _resetEvent.Reset();
+                    listener.BeginAccept(OnListenerAccepted, listener);
+                }
+            }
+        }
+
         private void ListenForMessage()
         {
             using (var listener = CreateListener())
             {
-                while (_continued)
+                while (true)
                 {
-                    using (var handler = listener.Accept())
+                    var handler = listener.Accept();
+                    FetchMessage(handler, message =>
                     {
-                        var message = FetchMessage(handler);
-                        OnMessageReceived(message);
-                        PushMessage(handler, "OK");
-                    }
+                        var args = new SocketMessageEventArgs(message);
+                        OnMessageReceived(args);
+                        PushMessage(handler, args.RespondedMessage);
+                        handler.Close();
+                    });
                 }
             }
+        }
+
+        private void OnListenerAccepted(IAsyncResult ar)
+        {
+            _resetEvent.Set();
+            var listener = ar.AsyncState as Socket;
+            if (listener == null) return;
+
+            var handler = listener.EndAccept(ar);
+
+            BeginFetchMessage(handler, message =>
+            {
+                var args = new SocketMessageEventArgs(message);
+                OnMessageReceived(args);
+                BeginPushMessage(handler, args.RespondedMessage);
+                handler.Close();
+            });
         }
         #endregion
     }

@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using System.Threading;
 
 
 namespace SocketCommon
@@ -11,22 +11,17 @@ namespace SocketCommon
     {
         #region Fields
         private const int BACKLOG = 10;
-        private const int BUFFER_SIZE = 1024;
         private const int PORT = 11000;
-        private static readonly Encoding _defaultEncoding = Encoding.Default;
-        private static readonly string _defaultEof = _defaultEncoding.GetString(new byte[] { 255, 0, 255, 0 });
+
         private static readonly IPHostEntry _hostEntry = Dns.GetHostEntry(Dns.GetHostName());
-        #endregion
-
-
-        #region  Properties & Indexers
-        public static string EndOfStream { get; set; } = _defaultEof;
+        protected readonly ManualResetEvent _resetEvent = new ManualResetEvent(false);
+        private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;
         #endregion
 
 
         #region Events
-        public event EventHandler<string> Error;
-        public event EventHandler<string> MessageReceived;
+        public event EventHandler<SocketErrorEventArgs> Error;
+        public event EventHandler<SocketMessageEventArgs> MessageReceived;
         #endregion
 
 
@@ -62,38 +57,51 @@ namespace SocketCommon
 
 
         #region Implementation
-        protected virtual string FetchMessage(Socket listener)
+        protected virtual void BeginFetchMessage(Socket listener, Action<string> fetchEndCallback = null)
         {
-            var sb = new StringBuilder();
-            var buffer = new byte[BUFFER_SIZE];
-            while (true)
+            new SocketFetcher(listener, fetchEndCallback).BeginReceive();
+        }
+
+        protected virtual void BeginPushMessage(Socket sender, string message, Action pushEndCallback = null)
+            => new SocketPusher(sender, pushEndCallback).BeginSend(message);
+
+        protected virtual void FetchMessage(Socket listener, Action<string> fetchEndCallback)
+        {
+            new SocketFetcher(listener, fetchEndCallback).Receive();
+        }
+
+        protected virtual void OnError(SocketErrorEventArgs e)
+        {
+            OnEventTriggered(Error, e);
+        }
+
+        protected virtual void OnEventTriggered<TEventArgs>(EventHandler<TEventArgs> evnt, TEventArgs e)
+            where TEventArgs: EventArgs
+        {
+            if (_synchronizationContext != null)
+                _synchronizationContext.Send(_ => evnt?.Invoke(this, e), null);
+            else
+                evnt?.Invoke(this, e);
+        }
+
+        protected virtual void OnMessageReceived(SocketMessageEventArgs e)
+        {
+            OnEventTriggered(MessageReceived, e);
+        }
+
+        protected virtual void PushMessage(Socket sender, string message, Action pushEndCallback = null)
+            => new SocketPusher(sender, pushEndCallback).Send(message);
+
+        protected virtual void TryDo(Action action)
+        {
+            try
             {
-                var length = listener.Receive(buffer);
-                var bufferString = _defaultEncoding.GetString(buffer, 0, length);
-                sb.Append(bufferString);
-                if (bufferString.EndsWith(EndOfStream)) break;
+                action();
             }
-            return sb.ToString(0, sb.Length - EndOfStream.Length);
-        }
-
-        protected virtual void PushMessage(Socket sender, string message)
-        {
-            sender.Send(Serialize(message));
-        }
-
-        protected virtual void OnError(string e)
-        {
-            Error?.Invoke(this, e);
-        }
-
-        protected virtual void OnMessageReceived(string message)
-        {
-            MessageReceived?.Invoke(this, message);
-        }
-
-        protected virtual byte[] Serialize(string s)
-        {
-            return _defaultEncoding.GetBytes(s + EndOfStream);
+            catch (Exception exception)
+            {
+                OnError(new SocketErrorEventArgs(exception.Message));
+            }
         }
         #endregion
     }

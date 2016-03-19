@@ -1,5 +1,6 @@
 ﻿using System;
 using ServerSocket;
+using SocketCommon;
 
 
 namespace ServerSocketConsole
@@ -7,14 +8,15 @@ namespace ServerSocketConsole
     internal class Program
     {
         #region Event Handlers
-        private static void Listener_Error(object sender, string e)
+        private static void Listener_Error(object sender, SocketErrorEventArgs e)
         {
-            Console.WriteLine($"Error: {e}\r\n");
+            Console.WriteLine($"Error: {e.Error}\r\n");
         }
 
-        private static void Listener_MessageReceived(object sender, string e)
+        private static void Listener_MessageReceived(object sender, SocketMessageEventArgs e)
         {
-            Console.WriteLine($"Message received: {e}");
+            Console.WriteLine($"Message received: {e.ReceivedMessage}");
+            e.RespondedMessage = "OK";
             AnnouceListening();
         }
         #endregion
